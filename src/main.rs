@@ -61,8 +61,16 @@ impl App {
         const BALL_Y_CENTER: f64 = 171.0;
 
         //update paddles positions
-        self.left_pos += self.left_vel;
-        self.right_pos += self.right_vel;
+        //check paddle against screen y edge. If adding velocity will move it over, stop and reset.
+        if (self.left_pos > 1.0 && self.left_vel == -1.0) ||
+           (self.left_pos < 291.0 && self.left_vel == 1.0) {
+                self.left_pos += self.left_vel;
+           }
+
+        if (self.right_pos > 1.0 && self.right_vel == -1.0) ||
+           (self.right_pos < 291.0 && self.right_vel == 1.0) {
+               self.right_pos += self.right_vel;
+           }
 
         //update ball position
         self.ball_x += self.ball_vx;
