@@ -24,19 +24,26 @@ impl App {
         const BACKGROUND: [f32; 4] = [0.0, 0.5, 0.5, 1.0];
         const FOREGROUND: [f32; 4] = [0.0, 0.0, 1.0, 1.0];
 
+        let left = rectangle::square(0.0, 0.0, 50.0);
         let left_pos = self.left_pos as f64;
+
+        let right = rectangle::square(0.0, 0.0, 50.0);
         let right_pos = self.right_pos as f64;
+
+        let ball = rectangle::square(0.0, 0.0, 10.0);
 
         self.gl.draw(args.viewport(), |c, gl| {
             clear(BACKGROUND, gl);
-            let left = rectangle::square(0.0, 0.0, 50.0);
-            let right = rectangle::square(0.0, 0.0, 50.0);
+            // let ball = rectangle::square(0.0, 0.0, 10.0);
 
             //render left paddle (left side, move right 40 px)
             rectangle(FOREGROUND, left, c.transform.trans(-40.0, left_pos), gl);
 
             //render right paddle (to the right edge of the sceeen, moved in by 10 px)
             rectangle(FOREGROUND, right, c.transform.trans(args.width as f64 - 10.0, right_pos), gl);
+
+            //render ball at the middle of the screen
+            rectangle(FOREGROUND, ball, c.transform.trans(0.0, 0.0), gl);
         });
     }
 
