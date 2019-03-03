@@ -12,8 +12,14 @@ use opengl_graphics::{GlGraphics, OpenGL};
 
 pub struct App {
     gl: GlGraphics,
-    left_pos: i32,
-    right_pos:i32,
+    left_pos: f64,
+    left_vel: f64,
+    right_pos: f64,
+    right_vel: f64,
+    ball_x: f64,
+    ball_y: f64,
+    ball_vx: f64,
+    ball_vy: f64,
 }
 
 impl App {
@@ -25,12 +31,14 @@ impl App {
         const FOREGROUND: [f32; 4] = [0.0, 0.0, 1.0, 1.0];
 
         let left = rectangle::square(0.0, 0.0, 50.0);
-        let left_pos = self.left_pos as f64;
+        let left_pos = self.left_pos;
 
         let right = rectangle::square(0.0, 0.0, 50.0);
-        let right_pos = self.right_pos as f64;
+        let right_pos = self.right_pos;
 
         let ball = rectangle::square(0.0, 0.0, 10.0);
+        let ball_x = self.ball_x;
+        let ball_y = self.ball_y;
 
         self.gl.draw(args.viewport(), |c, gl| {
             clear(BACKGROUND, gl);
@@ -43,11 +51,88 @@ impl App {
             rectangle(FOREGROUND, right, c.transform.trans(args.width as f64 - 10.0, right_pos), gl);
 
             //render ball at the middle of the screen
-            rectangle(FOREGROUND, ball, c.transform.trans(0.0, 0.0), gl);
+            rectangle(FOREGROUND, ball, c.transform.trans(ball_x, ball_y), gl);
         });
     }
 
     fn update(&mut self, _args: &UpdateArgs) {
+
+        const BALL_X_CENTER: f64 = 256.0;
+        const BALL_Y_CENTER: f64 = 171.0;
+
+        //update paddles positions
+        self.left_pos += self.left_vel;
+        self.right_pos += self.right_vel;
+
+        //update ball position
+        self.ball_x += self.ball_vx;
+        self.ball_y += self.ball_vy;
+
+        //collision detection with screen, x direction
+        if self.ball_x > 502.0 {
+            //reverse x velocity
+            self.ball_vx = -self.ball_vx;
+            // right side, check ball y position against right paddle y position
+            if self.ball_y < self.right_pos || self.ball_y > self.right_pos + 50.0 {
+                //ball position passed right paddle, score increase for left player and reset ball.
+                self.ball_x = BALL_X_CENTER;
+                self.ball_y = BALL_Y_CENTER;
+            }
+        } else if self.ball_x < 1.0 {
+            self.ball_vx = -self.ball_vx;
+            // left side, check ball y position against left paddle y position
+            if self.ball_y < self.left_pos || self.ball_y > self.left_pos + 50.0 {
+                //ball position passed left padde, score increase for right player and reset ball.
+                self.ball_x = BALL_X_CENTER;
+                self.ball_y = BALL_Y_CENTER;
+            }
+        }
+
+        //collision detection with screen, y direction,
+        //reverse thruster!
+        if self.ball_y > 342.0 || self.ball_y < 1.0 {
+            self.ball_vy = - self.ball_vy;
+        }
+    }
+
+    fn press(&mut self, args: &Button) {
+        if let &Button::Keyboard(key) = args {
+            match key {
+                Key::Up => {
+                    self.right_vel = -1.0;
+                }
+                Key::Down => {
+                    self.right_vel = 1.0;
+                }
+                Key::W => {
+                    self.left_vel = -1.0;
+                }
+                Key::S => {
+                    self.left_vel = 1.0;
+                }
+                _ => {}
+            }
+        }
+    }
+
+    fn release(&mut self, args: &Button) {
+        if let &Button::Keyboard(key) = args {
+            match key {
+                Key::Up => {
+                    self.right_vel = 0.0;
+                }
+                Key::Down => {
+                    self.right_vel = 0.0;
+                }
+                Key::W => {
+                    self.left_vel = 0.0;
+                }
+                Key::S => {
+                    self.left_vel = 0.0;
+                }
+                _ => {}
+            }
+        }
     }
 }
 
@@ -63,8 +148,14 @@ fn main() {
 
     let mut app = App {
         gl:GlGraphics::new(opengl),
-        left_pos:1,
-        right_pos:1
+        left_pos:171.0,
+        left_vel:0.0,
+        right_pos:171.0,
+        right_vel:0.0,
+        ball_x:256.0,
+        ball_y:171.0,
+        ball_vx:1.0,
+        ball_vy:1.0,
     };
 
     let mut events = Events::new(EventSettings::new());
@@ -75,6 +166,14 @@ fn main() {
 
         if let Some(u) = e.update_args() {
             app.update(&u);
+        }
+
+        if let Some(b) = e.press_args() {
+            app.press(&b);
+        }
+
+        if let Some(b) = e.release_args() {
+            app.release(&b);
         }
     }
 }
