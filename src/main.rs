@@ -3,6 +3,7 @@ extern crate graphics;
 extern crate opengl_graphics;
 extern crate piston;
 
+use std::process;
 use glutin_window::GlutinWindow as Window;
 use piston::window::WindowSettings;
 use piston::event_loop::*;
@@ -14,14 +15,18 @@ pub struct App {
     gl: GlGraphics,
     left_pos: f64,
     left_vel: f64,
+    left_score: i32,
     right_pos: f64,
     right_vel: f64,
+    right_score: i32,
     ball_x: f64,
     ball_y: f64,
     ball_vx: f64,
     ball_vy: f64,
+
 }
 
+//TODO: score board, grceful win reset.
 impl App {
 
     fn render(&mut self, args: &RenderArgs) {
@@ -83,6 +88,11 @@ impl App {
             // right side, check ball y position against right paddle y position
             if self.ball_y < self.right_pos || self.ball_y > self.right_pos + 50.0 {
                 //ball position passed right paddle, score increase for left player and reset ball.
+                self.left_score += 1;
+                if self.left_score > 5 {
+                    println!("Left Player wins!");
+                    process::exit(0);
+                }
                 self.ball_x = BALL_X_CENTER;
                 self.ball_y = BALL_Y_CENTER;
             }
@@ -90,7 +100,12 @@ impl App {
             self.ball_vx = -self.ball_vx;
             // left side, check ball y position against left paddle y position
             if self.ball_y < self.left_pos || self.ball_y > self.left_pos + 50.0 {
-                //ball position passed left padde, score increase for right player and reset ball.
+                //ball position passed left paddle, score increase for right player and reset ball.
+                self.right_score +=1;
+                if self.right_score > 5 {
+                    println!("Right Player wins!");
+                    process::exit(0);
+                }
                 self.ball_x = BALL_X_CENTER;
                 self.ball_y = BALL_Y_CENTER;
             }
@@ -158,8 +173,10 @@ fn main() {
         gl:GlGraphics::new(opengl),
         left_pos:171.0,
         left_vel:0.0,
+        left_score:0,
         right_pos:171.0,
         right_vel:0.0,
+        right_score:0,
         ball_x:256.0,
         ball_y:171.0,
         ball_vx:1.0,
